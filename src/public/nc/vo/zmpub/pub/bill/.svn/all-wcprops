@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/1023/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill
+END
+BaseVO.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/1023/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/BaseVO.java
+END
+ZMMultiChildBillCardPanelWrapper.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/1023/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/ZMMultiChildBillCardPanelWrapper.java
+END
+ZMBillCardPanelWrapper.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/1023/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/ZMBillCardPanelWrapper.java
+END
+HYHeadSuperVO.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/43/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/HYHeadSuperVO.java
+END
+HYChildSuperVO.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/43/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/HYChildSuperVO.java
+END
+NewBaseVO.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/44/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/NewBaseVO.java
+END
+MyBillVO.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/6/trunk/yalilang/src/public/nc/vo/zmpub/pub/bill/MyBillVO.java
+END
