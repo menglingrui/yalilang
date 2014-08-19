@@ -1671,4 +1671,15 @@ public class ZmPubTool {
 		return PuPubVO.getString_TrimZeroLenAsNull(ZmPubTool.execFomular("invname->getColValue(bd_invmandoc,pk_invbasdoc, pk_invmandoc , pk_invmandoc  )", 
 				new String[]{"pk_invmandoc "}, new String[]{pk_invmandoc}));
 	}
+	/**
+	 * 根据存货管理主键获得存货基本主键
+	 * @param pk_invmandoc
+	 * @author Jay
+	 * @return
+	 * @throws BusinessException
+	 */
+	public static String getInvbaspkBymanPkForClient(String pk_invmandoc) throws BusinessException {
+		return PuPubVO.getString_TrimZeroLenAsNull(ZmPubTool.execFomularClient("invname->getColValue(bd_invmandoc,pk_invbasdoc, pk_invmandoc , pk_invmandoc  )", 
+				new String[]{"pk_invmandoc "}, new String[]{pk_invmandoc}));
+	}
 }
