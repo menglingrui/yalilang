@@ -817,4 +817,90 @@ public class CombinVO {
 	    return tarVos;
 	}
 
+	public static void copyValueByContion(ReportBaseVO[] dvos,
+			ReportBaseVO[] svos, String[] AverageConditions,
+			String[] AveragecombinFields) {
+		if(dvos==null || dvos.length==0){
+			return ;
+		}
+		if(svos==null || svos.length==0){
+			return ;
+		}
+		if(AverageConditions==null || AverageConditions.length==0){
+			return ;
+		}
+		if(AveragecombinFields==null || AveragecombinFields.length==0){
+			return ;
+		}
+		
+		for(int i=0;i<dvos.length;i++){
+			for(int j=0;j<svos.length;j++){
+				if(isEqual(dvos[i],svos[j],AverageConditions)){
+					copyValue(dvos[i],svos[j],AveragecombinFields);
+					break;
+				}
+			}
+		}	
+		return ;
+	}
+
+	public static ReportBaseVO[] averageData(ReportBaseVO[] dvos,
+			String[] AverageConditions,String[] AveragecombinFields) throws Exception {
+		if(dvos==null || dvos.length==0){
+			return dvos;
+		}
+		if(AverageConditions==null || AverageConditions.length==0){
+			return dvos;
+		}
+		if(AveragecombinFields==null || AveragecombinFields.length==0){
+			return dvos;
+		}
+	    List<ReportBaseVO> list=new ArrayList<ReportBaseVO>();
+	    
+	    ReportBaseVO[][] voss=(ReportBaseVO[][]) SplitBillVOs.getSplitVOs(dvos, AverageConditions);
+		
+	    for(int i=0;i<voss.length;i++){
+	    	ReportBaseVO[] vos=voss[i];
+	    	
+	    	ReportBaseVO vo=Average(vos,AverageConditions);
+	    	
+	    	list.add(vo);
+	    }		
+		return list.toArray(new ReportBaseVO[0]);
+	}
+
+	public static ReportBaseVO Average(ReportBaseVO[] vos,
+			String[] averageConditions) throws Exception {
+        ReportBaseVO vo=(ReportBaseVO) ObjectUtils.serializableClone(vos[0]);
+		
+        for(int i=0;i<averageConditions.length;i++){
+        	String name=averageConditions[i];
+        	UFDouble snum=new UFDouble(0);
+        	for(int j=0;j<vos.length;j++){
+        		snum=snum.add(PuPubVO.getUFDouble_NullAsZero(vos[j].getAttributeValue(name)));
+        	}
+        	vo.setAttributeValue(name, snum.div(new UFDouble(vos.length)));
+        }	
+		return vo;
+	}
+
+	public static void copyValue(ReportBaseVO dvo, ReportBaseVO svo,
+			String[] fields) {
+		for(int i=0;i<fields.length;i++){
+			dvo.setAttributeValue(fields[i], svo.getAttributeValue(fields[i]));
+		}
+		
+	}
+
+	public static boolean isEqual(ReportBaseVO dvo, ReportBaseVO svo,
+			String[] fields) {
+	    
+		for(int i=0;i<fields.length;i++){
+			if(!isEqual(dvo.getAttributeValue(fields[i]),svo.getAttributeValue(fields[i]))){
+				return false;
+			}
+		}	
+		return true;
+	}
+
 }

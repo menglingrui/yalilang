@@ -148,6 +148,94 @@ public abstract class BillStockBO extends StockBO {
 			updateStock(numvos);
 		}	
 	}
+	
+	/**
+	 * 增加返回现存量提示信息，主要是如果现存量为负数时会返回提示
+	 * 业务单据更新现存量 传来的是业务单据的数据  
+	 * @param vos
+	 *            业务单据数据
+	 * @param pk_billtype
+	 *            更新现存量单据类型
+	 * @throws Exception
+	 */
+	public String updateStockByBillForSave1(AggregatedValueObject vos, String pk_billtype)
+			throws Exception {
+		if(vos!=null&&vos.getChildrenVO()!=null&&vos.getChildrenVO().length>0){
+			Map<String, String> map = getTypetoChangeClass();
+			if (map == null || map.size() == 0)
+				throw new Exception("没有注册单据类型->现存量的数据交换类");
+			String className = map.get(pk_billtype);
+			if (className == null || className.length() == 0)
+				throw new Exception(" 单据类型为:" + pk_billtype + " 没有注册交换类");
+			String changeClName = getClassName();
+			if (changeClName == null || changeClName.length() == 0)
+				throw new Exception("没有注册现存量实现类的全路径");
+			// 处理单据修改操 修改行数据 处理单据修改操 删行数据
+			String dupstring=dealModUpdate1(vos, pk_billtype);
+			String dmpstring=dealModDelete1(vos, pk_billtype);
+			Class cl = Class.forName(changeClName);
+			// 过滤掉删除行
+			AggregatedValueObject billvo = filterDelAndUpdate(vos);
+			SuperVO[] numvos = SingleVOChangeDataBsTool.runChangeVOAry(billvo, cl,
+					className);
+			if (numvos == null || numvos.length == 0) {
+				return null;
+			}
+			setAccountNumChange(numvos, pk_billtype);
+			return updateStock1(numvos);
+		}
+		return null;
+	}
+	public String dealModDelete1(AggregatedValueObject vos, String pk_billtype) throws Exception {
+		if (vos.getParentVO() == null) {
+			throw new Exception("单据表头为空");
+		}
+		if (vos.getChildrenVO() == null || vos.getChildrenVO().length == 0)
+			return null;
+		SuperVO[] bodys = (SuperVO[]) ObjectUtils.serializableClone(vos
+				.getChildrenVO());
+		// 存放修改 删除的vo
+		List<SuperVO> list = new ArrayList<SuperVO>();
+		for (int i = 0; i < bodys.length; i++) {
+			if (bodys[i].getStatus() == VOStatus.DELETED) {
+				list.add(bodys[i]);
+			}
+		}
+		if (list == null || list.size() == 0)
+			return null;
+
+		Map<String, String> map = getTypetoChangeClass();
+		String changeClName = getClassName();
+		Class cl = Class.forName(changeClName);
+		String className = map.get(pk_billtype);
+		SuperVO headVo = (SuperVO) ObjectUtils.serializableClone(vos
+				.getParentVO());		
+		//add mlr for modifysave start
+		AggregatedValueObject nbillvo = new HYBillVO();
+		nbillvo.setParentVO(headVo);
+		SuperVO[] novos = (SuperVO[]) java.lang.reflect.Array.newInstance(list
+				.get(0).getClass(), list.size());
+		for(int i=0;i<list.size();i++){
+			novos[i]=(SuperVO) ObjectUtils.serializableClone(list.get(i));
+		}
+		nbillvo.setChildrenVO(novos);	
+		SuperVO[] nnumvos = SingleVOChangeDataBsTool.runChangeVOAry(nbillvo, cl,
+				className);
+		//add mlr for modifysave  end
+		
+		if (getChangeNums() == null || getChangeNums().length == 0)
+			throw new Exception("没有注册现存量变化字段");
+		for (int i = 0; i < nnumvos.length; i++) {
+			for (int j = 0; j < getChangeNums().length; j++) {
+					UFDouble nuf=PuPubVO.getUFDouble_NullAsZero(nnumvos[i]
+                        .getAttributeValue(getChangeNums()[j]));
+				nnumvos[i].setAttributeValue(getChangeNums()[j], new UFDouble(0)
+						.sub(nuf));
+			}
+		}
+		setAccountNumChange(nnumvos, pk_billtype);
+		return updateStock1(nnumvos);
+	}
 
 	public void dealModDelete(AggregatedValueObject vos, String pk_billtype) throws Exception {
 		if (vos.getParentVO() == null) {
@@ -222,6 +310,27 @@ public abstract class BillStockBO extends StockBO {
 	}
 	
 	/**
+	 * 业务单据更新现存量 传来的是业务单据的数据
+	 * @param vos
+	 *            业务单据数据
+	 * @param pk_billtype
+	 *            更新现存量单据类型
+	 * @throws Exception
+	 */
+	public void updateStockByBillForDelete1(AggregatedValueObject vos, String pk_billtype)
+			throws Exception {
+		if(vos!=null&&vos.getChildrenVO()!=null&&vos.getChildrenVO().length>0){
+		     for(int i=0;i<vos.getChildrenVO().length;i++){
+		    	 CircularlyAccessibleValueObject vo=  vos.getChildrenVO()[i];
+		    	 if(vo!=null){
+		    		 vo.setStatus(VOStatus.DELETED);
+		    	 }
+		     }
+		 	updateStockByBillForSave1( vos,  pk_billtype);
+		}
+	}
+	
+	/**
 	 * 过滤掉删除行
 	 * @throws Exception
 	 * @作者：mlr
@@ -247,7 +356,85 @@ public abstract class BillStockBO extends StockBO {
 				.newInstance(bvos[0].getClass(), 0)));
 		return billvo;
 	}
-
+	/**
+	 * 处理单据修改操作 修改行数据 处理单据修改操作 删行数据
+	 * @param pk_billtype
+	 * @作者：mlr
+	 * @说明：完达山物流项目
+	 * @时间：2012-6-28下午12:39:13
+	 */
+	private String dealModUpdate1(AggregatedValueObject vos, String pk_billtype)
+			throws Exception {
+		if (vos.getParentVO() == null) {
+			throw new Exception("单据表头为空");
+		}
+		if (vos.getChildrenVO() == null || vos.getChildrenVO().length == 0)
+			return null;
+		SuperVO[] bodys = (SuperVO[]) ObjectUtils.serializableClone(vos
+				.getChildrenVO());
+		// 存放修改 删除的vo
+		List<SuperVO> list = new ArrayList<SuperVO>();
+		for (int i = 0; i < bodys.length; i++) {
+			if (bodys[i].getStatus() == VOStatus.UPDATED) {
+				list.add(bodys[i]);
+			}
+		}
+		if (list == null || list.size() == 0)
+			return null;
+		// 存放修改删除的记录的 数据库对应记录 vo
+		SuperVO[] ovos = (SuperVO[]) java.lang.reflect.Array.newInstance(list
+				.get(0).getClass(), list.size());
+		for (int i = 0; i < list.size(); i++) {
+			List li = (List) getDao().retrieveByClause(
+					list.get(0).getClass(),
+					list.get(0).getPKFieldName() + " = '"
+							+ list.get(i).getPrimaryKey() + "'");
+			if (li != null && li.size() != 0)
+				ovos[i] = (SuperVO) li.get(0);
+		}
+		Map<String, String> map = getTypetoChangeClass();
+		String changeClName = getClassName();
+		Class cl = Class.forName(changeClName);
+		String className = map.get(pk_billtype);
+		SuperVO headVo = (SuperVO) ObjectUtils.serializableClone(vos
+				.getParentVO());
+		SuperVO[] bodyVos = (SuperVO[]) ObjectUtils.serializableClone(ovos);
+		AggregatedValueObject billvo = new HYBillVO();
+		billvo.setParentVO(headVo);
+		billvo.setChildrenVO(bodyVos);
+		
+		
+		SuperVO[] numvos = SingleVOChangeDataBsTool.runChangeVOAry(billvo, cl,
+				className);
+		
+		//add mlr for modifysave end
+		AggregatedValueObject nbillvo = new HYBillVO();
+		nbillvo.setParentVO(headVo);
+		SuperVO[] novos = (SuperVO[]) java.lang.reflect.Array.newInstance(list
+				.get(0).getClass(), list.size());
+		for(int i=0;i<list.size();i++){
+			novos[i]=(SuperVO) ObjectUtils.serializableClone(list.get(i));
+		}
+		nbillvo.setChildrenVO(novos);	
+		SuperVO[] nnumvos = SingleVOChangeDataBsTool.runChangeVOAry(nbillvo, cl,
+				className);
+		//add mlr for modifysave  end
+		
+		if (getChangeNums() == null || getChangeNums().length == 0)
+			throw new Exception("没有注册现存量变化字段");
+		for (int i = 0; i < numvos.length; i++) {
+			for (int j = 0; j < getChangeNums().length; j++) {
+				UFDouble uf = PuPubVO.getUFDouble_NullAsZero(numvos[i]
+						.getAttributeValue(getChangeNums()[j]));
+				UFDouble nuf=PuPubVO.getUFDouble_NullAsZero(nnumvos[i]
+                        .getAttributeValue(getChangeNums()[j]));
+				numvos[i].setAttributeValue(getChangeNums()[j], nuf
+						.sub(uf));
+			}
+		}
+		setAccountNumChange(numvos, pk_billtype);
+		return updateStock1(numvos);
+	}
 	/**
 	 * 处理单据修改操作 修改行数据 处理单据修改操作 删行数据
 	 * @param pk_billtype

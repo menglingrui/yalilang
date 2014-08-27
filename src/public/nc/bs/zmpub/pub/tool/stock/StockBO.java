@@ -74,6 +74,62 @@ public abstract class StockBO implements Serializable {
 	 * @return
 	 */
 	public abstract String getClassName();
+	
+	/**
+	 * 更新现存量
+	 * 
+	 * @param accounts
+	 * @throws Exception
+	 */
+	public String updateStock1(SuperVO[] accounts1) throws Exception {
+		if (getDef_Fields() == null || getDef_Fields().length == 0) {
+			throw new Exception("没有注册现存量最小维度数组");
+		}
+		if (getChangeNums() == null || getChangeNums().length == 0) {
+			throw new Exception("没有注册影响现存量变化的数组");
+		}
+		if (getClassName() == null || getClassName().length() == 0) {
+			throw new Exception("没有注册现存量实现类的全路径");
+		}
+		Class cl = Class.forName(getClassName());
+		// 首先按 最小的维度进行数据合并
+		SuperVO[] accounts = (SuperVO[]) CombinVO.combinData(accounts1,
+				getDef_Fields(), getChangeNums(), cl);
+		if (accounts == null || accounts.length == 0)
+			return null;
+		checkBeforeUpdate(accounts);
+		lock(accounts);
+		int size = accounts.length;
+		String whereSql = null;
+		for (int i = 0; i < size; i++) {
+			whereSql = getWhereSql(accounts[i]);
+			whereSql = whereSql + " and isnull(dr,0)=0 ";
+			SuperVO[] vos = queryStock(whereSql);
+			// 数据库中没有该维度的数据 就新插入一条
+			if (vos == null || vos.length == 0) {
+				getDao().insertVO(accounts[i]);
+			} else if (vos.length > 1) {
+				throw new Exception("数据异常 按最小维度获取现存量数据 数量超过一条");
+			}
+			// 如果按最小维度查询有一条的话 就将新的数据加到旧的数据上执行 更新操作
+			else if (vos.length == 1) {
+				SuperVO oldvo = vos[0];// 从数据库中查询出来的数据
+				SuperVO newvo = accounts[i];
+				String[] changeNums = getChangeNums();
+				for (int j = 0; j < changeNums.length; j++) {
+					UFDouble old = PuPubVO.getUFDouble_NullAsZero(oldvo
+							.getAttributeValue(changeNums[j]));
+					UFDouble newo = PuPubVO.getUFDouble_NullAsZero(newvo
+							.getAttributeValue(changeNums[j]));
+					oldvo.setAttributeValue(changeNums[j], old.add(newo));
+				}
+				getDao().updateVO(oldvo);
+			}
+		}
+		// 现存量更新完了之后,校验现存量是否会出现负值
+		// 如果出现负值 进行数据回滚
+		return check1(accounts);
+	}
 
 	/**
 	 * 更新现存量
@@ -230,6 +286,45 @@ public abstract class StockBO implements Serializable {
 						list.size()));
 		return vos;
 
+	}
+	
+	/**
+	 * 校验现存量数据不能为负值
+	 * 
+	 * @param whereSql
+	 * @return
+	 * @throws Exception
+	 */
+	public String check1(SuperVO[] vos) throws Exception {
+		if (vos == null || vos.length == 0)
+			return null;
+		for (int i = 0; i < vos.length; i++) {
+			String whereSql = getWhereSql(vos[i]);
+			SuperVO[] ols = queryStock(whereSql);
+			if (ols == null || ols.length == 0)
+				return null;
+			for (int j = 0; j < ols.length; j++) {
+				String[] fields = getChangeNums();
+				if (fields == null || fields.length == 0) {
+					throw new Exception("没有注册现存量变化字段");
+				}
+				for (int k = 0; k < fields.length; k++) {
+					UFDouble uf = PuPubVO.getUFDouble_NullAsZero(ols[j]
+							.getAttributeValue(fields[k]));
+					if (uf.compareTo(new UFDouble(0.0)) < 0) {
+						String errmsg=getErrorMsg(vos[i]);
+						
+						if(errmsg==null || errmsg.length()==0){
+							errmsg="现存量出现负值";
+						}else{
+							errmsg="现存量出现负值 :"+errmsg;
+						}
+						return errmsg;
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
