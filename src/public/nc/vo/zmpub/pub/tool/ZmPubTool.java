@@ -1682,4 +1682,16 @@ public class ZmPubTool {
 		return PuPubVO.getString_TrimZeroLenAsNull(ZmPubTool.execFomularClient("invname->getColValue(bd_invmandoc,pk_invbasdoc, pk_invmandoc , pk_invmandoc  )", 
 				new String[]{"pk_invmandoc "}, new String[]{pk_invmandoc}));
 	}
+	/**
+	 * 得到月份
+	 * 2014-09-11 ----->09
+	 * @param string
+	 * @return
+	 */
+	public static String getMonth(String string) {
+	    if(string==null || string.length()==0){
+	    	return string;
+	    }
+		return string.substring(5,7);
+	}
 }
