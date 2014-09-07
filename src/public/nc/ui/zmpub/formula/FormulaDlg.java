@@ -2883,13 +2883,13 @@ public class FormulaDlg extends UIDialog implements java.awt.event.ActionListene
 
 		for (int i = 0; i < formuPart.length; i++) {
 			String st = formuPart[i];
-			if (st.equals(getUIBnIf().getText().trim())) {// "如果"按钮
+			if (st.equals(getUIBnIf().getText().trim()) || st.equals("IIF")) {// "如果"按钮
 				if (i > 0
 						&& (!formuPart[i - 1].equals(getUIBnElse().getText()
 								.trim()))) {
 					vec.addElement(",");
 				}
-				vec.addElement("iif(");
+				vec.addElement("iif");
 				ifCount++;
 			} else if (st.equals(getUIBnElse().getText().trim())) {// "否则"按钮
 				vec.addElement(",");
@@ -2938,7 +2938,7 @@ public class FormulaDlg extends UIDialog implements java.awt.event.ActionListene
 
 				}else {
 					try {
-						Double.valueOf(st);
+//						Double.valueOf(st);
 						vec.addElement(st);
 					} catch (Exception ex) {
 						return null;
@@ -2946,7 +2946,7 @@ public class FormulaDlg extends UIDialog implements java.awt.event.ActionListene
 				}
 			}
 			// 开始
-			if (getUIBnIf().getText().trim().equals(st)
+			if (getUIBnIf().getText().trim().equals(st) || "IIF".equals(st)
 					|| getUIBnElse().getText().trim().equals(st)
 					|| getUIBnThen().getText().trim().equals(st)
 					|| getUIBnAnd().getText().trim().equals(st)
@@ -2967,20 +2967,20 @@ public class FormulaDlg extends UIDialog implements java.awt.event.ActionListene
 			}
 		}
 
-		if (ifCount != thenCount) {
-			return null;
-		}
-		if (ifCount > 0
-				&& (elseCount == 0 || (elseCount > 0 && defaultElseCount != elseCount))) {
-			return null;
-		}
+//		if (ifCount != thenCount) {
+//			return null;
+//		}
+//		if (ifCount > 0
+//				&& (elseCount == 0 || (elseCount > 0 && defaultElseCount != elseCount))) {
+//			return null;
+//		}
 		if (leftCount != rightCount) {
 			return null;
 		}
 
-		for (int i = 0; i < ifCount; i++) {
-			vec.addElement(")");
-		}
+//		for (int i = 0; i < ifCount; i++) {
+//			vec.addElement(")");
+//		}
 
 		if (vec.size() > 0) {
 			String reCode = "";
