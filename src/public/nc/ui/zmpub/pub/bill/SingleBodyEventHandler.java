@@ -18,7 +18,7 @@ import nc.vo.pub.ValidationException;
  *
  */
 public class SingleBodyEventHandler extends CardEventHandler{
-	private String sWhere =" pk_corp='"+_getCorp().getPrimaryKey()+"'";
+	public String sWhere =" pk_corp='"+_getCorp().getPrimaryKey()+"'";
 	public SingleBodyEventHandler(BillCardUI billUI, ICardController control) {
 		super(billUI, control);		
 	}

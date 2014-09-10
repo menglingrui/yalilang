@@ -30,7 +30,6 @@ import nc.ui.trade.manage.ManageEventHandler;
 import nc.ui.trade.multichild.MultiChildBillManageUI;
 import nc.ui.trade.query.INormalQuery;
 import nc.ui.zmpub.pub.tool.LongTimeTask;
-import nc.vo.jcom.lang.StringUtil;
 import nc.vo.pub.AggregatedValueObject;
 import nc.vo.pub.BusinessException;
 import nc.vo.pub.CircularlyAccessibleValueObject;
@@ -38,7 +37,6 @@ import nc.vo.pub.NullFieldException;
 import nc.vo.pub.SuperVO;
 import nc.vo.pub.VOStatus;
 import nc.vo.pub.ValidationException;
-import nc.vo.pub.pf.IPFConfigInfo;
 import nc.vo.scm.pu.PuPubVO;
 import nc.vo.scm.pub.session.ClientLink;
 import nc.vo.trade.pub.HYBillVO;
@@ -439,6 +437,23 @@ public  class FlowManageEventHandler extends ManageEventHandler {
 		Integer vbillstatus=PuPubVO.getInteger_NullAs(hvo.getAttributeValue("vbillstatus"), -10);
 		if(vbillstatus ==IBillStatus.FREE || vbillstatus==IBillStatus.COMMIT)
 		checkMaker1();
+		if (getBillManageUI().isListPanelSelected()) {
+			getBillManageUI().setCurrentPanel(BillTemplateWrapper.CARDPANEL);
+			getBufferData().updateView();
+		}
+		super.onBoEdit();
+	}
+	/**
+	 * 按钮m_boEdit点击时执行的动作,如有必要，请覆盖.
+	 */
+	protected void onBoEdit2() throws Exception {
+		// 界面没有数据或者有数据但是没有选中任何行
+		if (getBufferData().getCurrentVO() == null)
+			return;
+		SuperVO hvo=(SuperVO) getBufferData().getCurrentVO().getParentVO();
+		Integer vbillstatus=PuPubVO.getInteger_NullAs(hvo.getAttributeValue("vbillstatus"), -10);
+		if(vbillstatus ==IBillStatus.FREE || vbillstatus==IBillStatus.COMMIT)
+		//checkMaker1();
 		if (getBillManageUI().isListPanelSelected()) {
 			getBillManageUI().setCurrentPanel(BillTemplateWrapper.CARDPANEL);
 			getBufferData().updateView();

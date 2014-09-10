@@ -179,10 +179,10 @@ public abstract class BillStockBO extends StockBO {
 			SuperVO[] numvos = SingleVOChangeDataBsTool.runChangeVOAry(billvo, cl,
 					className);
 			if (numvos == null || numvos.length == 0) {
-				return null;
+				return dupstring;
 			}
 			setAccountNumChange(numvos, pk_billtype);
-			return updateStock1(numvos);
+			return updateStock1(numvos)+dmpstring;
 		}
 		return null;
 	}
