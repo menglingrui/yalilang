@@ -862,7 +862,7 @@ public class CombinVO {
 	    for(int i=0;i<voss.length;i++){
 	    	ReportBaseVO[] vos=voss[i];
 	    	
-	    	ReportBaseVO vo=Average(vos,AverageConditions);
+	    	ReportBaseVO vo=Average(vos,AveragecombinFields);
 	    	
 	    	list.add(vo);
 	    }		
